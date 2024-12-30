@@ -60,12 +60,15 @@ graph LR
 
 Privacy Shield combines several modern technologies to deliver a seamless and secure text-processing workflow:
 
-- **Presidio**: An open-source library for detecting and anonymizing PII, supporting over 100 PII types.
-- **LangChain**: A framework for building applications with LLMs, enabling reversible anonymization.
-- **OpenAI or Ollama API**: To integrate powerful LLMs like GPT-3.5-turbo or llama3.2 for text enhancement.
-- **Python**: The backbone of the solution, enabling backend logic and integration.
-- **FastAPI**: A lightweight, high-performance web framework for building the REST API.
+*   **[Presidio](https://microsoft.github.io/presidio/)**: An open-source library for **detecting and anonymizing PII**, supporting over 100 PII types.
 
+*   **[LangChain](https://www.langchain.com/)**: A framework for building **LLM-powered applications**, used here for reversible anonymization and LLM integration.
+
+*   **[OpenAI](https://openai.com/) or [Ollama API](https://ollama.com/)**: Provides access to powerful **LLMs like GPT-3.5-turbo or Llama3.2** for text processing.
+
+*   **Python**: The core programming language for the project's **backend logic and component integration.**
+
+*   **[FastAPI](https://fastapi.tiangolo.com/)**: A high-performance web framework for building the **REST API**.
 
 
 ## Technical Design / Schematic Flow
