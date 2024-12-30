@@ -1,10 +1,10 @@
-# Privacy Shield
-PrivacyShield: Secure text processing with LLMs, protecting PII using Presidio and LangChain.
+# Privacyshield
 
+Secure text processing with LLMs, protecting PII using Presidio and LangChain.
 
 ---
 
-## Blog Post: How to Enhance Text with LLMs While Safeguarding PII: Introducing Privacy Shield
+## Privacy Engineering with LLMs: Safeguarding PII While Enhancing Text with Privacy Shield
 
 ![Privacy Shield](privacy-shield-linkedin.webp)
 
