@@ -171,6 +171,12 @@ DEFAULT_MODEL="gpt-3.5-turbo"
 python3.10 main.py
 ```
 
+or run it in different port
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8001
+```
+
 #### Step 4: Access the API `http://localhost:8000`
 
 ---
