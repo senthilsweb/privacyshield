@@ -12,6 +12,7 @@ processing using the PrivacyShield core functionality.
 """
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from models import (
     TextRequest,
     RedactionRequest,
@@ -25,6 +26,14 @@ app = FastAPI(
     title="Privacy Shield API",
     description="API for PII detection, anonymization, and text transformation",
     version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
 )
 
 privacy_shield = PrivacyShield()
