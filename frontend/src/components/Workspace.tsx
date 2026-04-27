@@ -10,44 +10,114 @@ export interface OutputCardProps {
   title: string;
   subtitle?: string;
   text: string;
+  /**
+   * Entity spans whose `start`/`end` positions are valid against `text`.
+   * Used when {@link highlightEntities} is true.
+   */
   entities?: PiiEntity[];
-  /** When true, render <PLACEHOLDERS> as colored pills based on entity type. */
+  /** When true, render `<PLACEHOLDERS>` as colored pills based on entity type. */
   highlightPlaceholders?: boolean;
+  /**
+   * When true, render `entities` spans as colored pills (changed-text mode).
+   * Mutually compatible with {@link highlightPlaceholders}; if both are set,
+   * placeholders win when present.
+   */
+  highlightEntities?: boolean;
+  /** Show an in-card "Highlight PII" checkbox toggle. Defaults to false. */
+  showHighlightToggle?: boolean;
   className?: string;
 }
 
 const PLACEHOLDER_RE = /<([A-Z_]+)>/g;
 
+interface Segment {
+  text: string;
+  type?: string;
+}
+
+function segmentByEntities(text: string, entities: PiiEntity[]): Segment[] {
+  if (!entities.length) return [{ text }];
+  const sorted = [...entities]
+    .filter((e) => e.start >= 0 && e.end <= text.length && e.end > e.start)
+    .sort((a, b) => a.start - b.start);
+  const out: Segment[] = [];
+  let cursor = 0;
+  for (const e of sorted) {
+    if (e.start < cursor) continue; // skip overlapping spans
+    if (e.start > cursor) out.push({ text: text.slice(cursor, e.start) });
+    out.push({ text: text.slice(e.start, e.end), type: e.type });
+    cursor = e.end;
+  }
+  if (cursor < text.length) out.push({ text: text.slice(cursor) });
+  return out;
+}
+
 export function OutputCard({
   title,
   subtitle,
   text,
+  entities,
   highlightPlaceholders = true,
+  highlightEntities = false,
+  showHighlightToggle = false,
   className,
 }: OutputCardProps) {
+  const [highlightOn, setHighlightOn] = useState(true);
+  const effectivePlaceholders = highlightPlaceholders && highlightOn;
+  const effectiveEntities = highlightEntities && highlightOn;
+
   const rendered = useMemo(() => {
-    if (!highlightPlaceholders) return [text];
-    const parts = text.split(PLACEHOLDER_RE);
-    return parts.map((part, i) => {
-      if (i % 2 === 1) {
-        const style = styleFor(part);
-        return (
+    // Mode 1: <PLACEHOLDER> pill rendering.
+    if (effectivePlaceholders && PLACEHOLDER_RE.test(text)) {
+      // Reset lastIndex after the .test() probe.
+      PLACEHOLDER_RE.lastIndex = 0;
+      const parts = text.split(PLACEHOLDER_RE);
+      return parts.map((part, i) => {
+        if (i % 2 === 1) {
+          const style = styleFor(part);
+          return (
+            <span
+              key={i}
+              className={cn(
+                'mx-0.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-semibold ring-1 ring-inset',
+                style.bg,
+                style.text,
+                style.ring
+              )}
+            >
+              {part}
+            </span>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      });
+    }
+
+    // Mode 2: entity-span pill rendering against the actual displayed text.
+    if (effectiveEntities && entities && entities.length > 0) {
+      return segmentByEntities(text, entities).map((seg, i) =>
+        seg.type ? (
           <span
             key={i}
+            title={seg.type}
             className={cn(
-              'mx-0.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-semibold ring-1 ring-inset',
-              style.bg,
-              style.text,
-              style.ring
+              'rounded-md px-1 py-0.5 ring-1 ring-inset font-semibold',
+              styleFor(seg.type).bg,
+              styleFor(seg.type).text,
+              styleFor(seg.type).ring
             )}
           >
-            {part}
+            {seg.text}
           </span>
-        );
-      }
-      return <span key={i}>{part}</span>;
-    });
-  }, [text, highlightPlaceholders]);
+        ) : (
+          <span key={i}>{seg.text}</span>
+        )
+      );
+    }
+
+    // Mode 3: plain.
+    return [<span key="plain">{text}</span>];
+  }, [text, entities, effectivePlaceholders, effectiveEntities]);
 
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
@@ -68,16 +138,29 @@ export function OutputCard({
         className
       )}
     >
-      <header className="flex items-center justify-between border-b border-zinc-200/70 px-4 py-3 dark:border-zinc-800/70">
-        <div>
-          <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
+      <header className="flex items-center justify-between gap-3 border-b border-zinc-200/70 px-4 py-3 dark:border-zinc-800/70">
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-semibold tracking-tight">{title}</h3>
           {subtitle && (
-            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">{subtitle}</p>
+            <p className="mt-0.5 truncate text-xs text-zinc-500 dark:text-zinc-400">{subtitle}</p>
           )}
         </div>
-        <Button variant="ghost" size="icon" onClick={handleCopy} aria-label="Copy">
-          <Icon icon={copied ? 'mdi:check' : 'mdi:content-copy'} className="h-4 w-4" />
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          {showHighlightToggle && (
+            <label className="flex cursor-pointer select-none items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+              <input
+                type="checkbox"
+                checked={highlightOn}
+                onChange={(e) => setHighlightOn(e.target.checked)}
+                className="h-3.5 w-3.5 cursor-pointer rounded border-zinc-300 text-brand-700 focus:ring-brand-500 dark:border-zinc-600 dark:bg-zinc-800"
+              />
+              Highlight PII
+            </label>
+          )}
+          <Button variant="ghost" size="icon" onClick={handleCopy} aria-label="Copy">
+            <Icon icon={copied ? 'mdi:check' : 'mdi:content-copy'} className="h-4 w-4" />
+          </Button>
+        </div>
       </header>
       <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words p-4 font-mono text-[13px] leading-relaxed text-zinc-800 dark:prose-invert dark:text-zinc-200">
         {rendered}

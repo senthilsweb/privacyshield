@@ -37,7 +37,25 @@ class PromptDetail(PromptSummary):
 
 
 def _prompts_dir() -> Path:
-    return Path(os.getenv("PROMPTS_DIR", "prompts")).expanduser()
+    """
+    Resolve PROMPTS_DIR with a sensible default.
+
+    Priority:
+      1. $PROMPTS_DIR (absolute or relative — caller's responsibility).
+      2. The repository's ``prompts/`` folder one level above this file
+         (so `uvicorn --app-dir backend api:app` works from the repo root
+         even when launched without env vars).
+      3. ``./prompts`` relative to the current working directory.
+    """
+    env = os.getenv("PROMPTS_DIR")
+    if env:
+        return Path(env).expanduser()
+
+    repo_default = Path(__file__).resolve().parent.parent / "prompts"
+    if repo_default.is_dir():
+        return repo_default
+
+    return Path("prompts")
 
 
 def _safe_resolve(name: str) -> Path:

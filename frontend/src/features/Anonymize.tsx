@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { api, type AnonymizeResponse } from '@/lib/api';
+import { api, type AnonymizeResponse, type PiiEntity } from '@/lib/api';
 import { EmptyResult, FeatureLayout, OutputCard } from '@/components/Workspace';
 
 const SAMPLE = `Slim Shady recently lost his wallet.
@@ -16,6 +16,9 @@ export function AnonymizeFeature() {
   const [text, setText] = useState(SAMPLE);
   const [loading, setLoading] = useState(false);
   const [resp, setResp] = useState<AnonymizeResponse | null>(null);
+  // Entity spans re-detected against the *output* text so the UI can
+  // highlight what changed without an offset-translation step.
+  const [outputEntities, setOutputEntities] = useState<PiiEntity[]>([]);
 
   const onSubmit = async () => {
     if (!text.trim()) return;
@@ -23,6 +26,17 @@ export function AnonymizeFeature() {
     try {
       const r = await api.anonymize(text);
       setResp(r);
+      // Best-effort: re-detect on the output so colored highlights line up
+      // with the post-substitution positions. Silently no-op on failure.
+      const out = r.processed_text ?? r.faked_text ?? '';
+      if (out) {
+        try {
+          const det = await api.detect(out);
+          setOutputEntities(det.entities ?? []);
+        } catch {
+          setOutputEntities([]);
+        }
+      }
       toast.success('Anonymized with synthetic data');
     } catch (e) {
       toast.error((e as Error).message);
@@ -34,6 +48,7 @@ export function AnonymizeFeature() {
   const onReset = () => {
     setText(SAMPLE);
     setResp(null);
+    setOutputEntities([]);
   };
 
   return (
@@ -89,17 +104,22 @@ export function AnonymizeFeature() {
           <div className="space-y-4">
             {resp.processed_text && (
               <OutputCard
-                title="Placeholder text"
-                subtitle="PII replaced with type tags"
+                title="Anonymized output"
+                subtitle="PII replaced with realistic synthetic values"
                 text={resp.processed_text}
+                entities={outputEntities}
+                highlightPlaceholders={false}
+                highlightEntities
+                showHighlightToggle
               />
             )}
             {resp.anonymized_text && (
               <OutputCard
-                title="Anonymized text"
-                subtitle="Ready to share or send to an LLM"
+                title="Type-tagged version"
+                subtitle="Each PII span replaced with its category tag"
                 text={resp.anonymized_text}
-                highlightPlaceholders={false}
+                highlightPlaceholders
+                showHighlightToggle
               />
             )}
             {resp.faked_text && (
@@ -107,7 +127,10 @@ export function AnonymizeFeature() {
                 title="Faked text"
                 subtitle="Realistic synthetic substitutions"
                 text={resp.faked_text}
+                entities={outputEntities}
                 highlightPlaceholders={false}
+                highlightEntities
+                showHighlightToggle
               />
             )}
           </div>
