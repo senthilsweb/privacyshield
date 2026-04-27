@@ -178,6 +178,81 @@ export function DocsFeature() {
           </p>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Icon icon="mdi:console" className="h-5 w-5 text-brand-700 dark:text-brand-300" />
+            Command-line interface
+          </CardTitle>
+          <CardDescription>
+            Run any operation without the GUI or HTTP server — useful for batch jobs, CI
+            pipelines, smoke tests, and{' '}
+            <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">docker exec</code>.
+            The CLI lives at <code>backend/cli.py</code> and reuses the same{' '}
+            <code>PrivacyShield</code> core as the API.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm text-zinc-600 dark:text-zinc-400">
+          <div>
+            <p className="mb-1.5 font-medium text-zinc-700 dark:text-zinc-300">List supported entity types</p>
+            <CodeBlock
+              language="bash"
+              code={`# inside Docker
+docker exec privacy-shield python cli.py entities
+
+# locally
+cd backend && env/bin/python cli.py entities --json`}
+            />
+          </div>
+
+          <div>
+            <p className="mb-1.5 font-medium text-zinc-700 dark:text-zinc-300">Detect PII (placeholders)</p>
+            <CodeBlock
+              language="bash"
+              code={`docker exec privacy-shield python cli.py detect \\
+  "Linda Adams, ITIN 880-69-4570 lives in Paris" --text
+# → <PERSON>, ITIN <US_ITIN> lives in <LOCATION>`}
+            />
+          </div>
+
+          <div>
+            <p className="mb-1.5 font-medium text-zinc-700 dark:text-zinc-300">Anonymize with synthetic data</p>
+            <CodeBlock
+              language="bash"
+              code={`docker exec privacy-shield python cli.py anonymize \\
+  "Adjuster Linda Adams" --seed 42 --text`}
+            />
+          </div>
+
+          <div>
+            <p className="mb-1.5 font-medium text-zinc-700 dark:text-zinc-300">Enhance via LLM (round-trip)</p>
+            <CodeBlock
+              language="bash"
+              code={`docker exec -e OPENAI_API_KEY=sk-... privacy-shield \\
+  python cli.py enhance \\
+    --template prompts/incident.md \\
+    --model gpt-3.5-turbo --temperature 0.2 \\
+    "Linda Adams reports payment 880-69-4570 missing"`}
+            />
+          </div>
+
+          <div>
+            <p className="mb-1.5 font-medium text-zinc-700 dark:text-zinc-300">Pipe / stdin friendly</p>
+            <CodeBlock
+              language="bash"
+              code={`cat report.txt | docker exec -i privacy-shield \\
+  python cli.py detect --stdin --text > redacted.txt`}
+            />
+          </div>
+
+          <p>
+            Run <code>python cli.py --help</code> (or <code>&lt;subcommand&gt; --help</code>) for the
+            full flag list. Every subcommand emits JSON by default; pass <code>--text</code> for the
+            processed string only.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

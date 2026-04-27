@@ -60,8 +60,14 @@ export function EntitiesFeature() {
             Supported PII entities
           </CardTitle>
           <CardDescription>
-            Pulled live from <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">GET /entities</code>.
-            In a future release you'll be able to opt into a subset to make detection faster.
+            Pulled live from{' '}
+            <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">GET /entities</code>{' '}
+            — exactly the recognizers Microsoft Presidio's <code>AnalyzerEngine</code> registers
+            for the selected language. The default registry ships ~29 recognizers (PII, financial,
+            and country-specific IDs); custom <code>EntityRecognizer</code>s you add to the engine
+            will appear here automatically. A future release will let you opt into a subset to
+            make detection faster — that selector will be wired through Detect, Anonymize, and
+            Enhance and powered by this same endpoint.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
