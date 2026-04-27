@@ -1,0 +1,35 @@
+# Repo
+.git
+.gitignore
+.github
+.vscode
+.idea
+*.md
+!backend/fastapi_service.md
+!prompts/**/*.md
+
+# Python
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+backend/env
+backend/.env
+backend/.venv
+backend/logs
+
+# Node / Vite
+frontend/node_modules
+frontend/dist
+frontend/.env
+frontend/.env.local
+frontend/.next
+
+# OpenSpec / docs
+openspec
+docs
+
+# Misc
+*.webp
+*.log
+.DS_Store

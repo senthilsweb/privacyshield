@@ -1,0 +1,50 @@
+# Privacy Shield — single combined image (FastAPI + Vite SPA).
+#
+# The published image at ghcr.io/senthilsweb/privacyshield is multi-arch
+# (linux/amd64, linux/arm64). Pull it directly:
+#
+#     docker compose pull && docker compose up -d
+#
+# Or build locally with:
+#
+#     docker compose build
+#
+
+services:
+  privacyshield:
+    image: ghcr.io/senthilsweb/privacyshield:latest
+    # Pin the platform so Apple Silicon / ARM hosts pull (or build) the
+    # native arm64 variant and avoid slow x86_64 emulation. Override with
+    # `DOCKER_DEFAULT_PLATFORM=linux/amd64` or by editing this line.
+    platform: ${DOCKER_PLATFORM:-linux/arm64}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - ${DOCKER_PLATFORM:-linux/arm64}
+    container_name: privacyshield
+    restart: unless-stopped
+    ports:
+      - "8088:8000"
+    environment:
+      # OpenAI key is optional — only needed for the Enhance tab.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Comma-separated list of origins, or "*" for any.
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      # Set to "true" to expose the placeholder /convert route.
+      ENABLE_CONVERT: ${ENABLE_CONVERT:-false}
+      # Directory scanned for prompt templates (.txt / .md). Bind-mount
+      # below to drop in custom prompts without rebuilding the image.
+      PROMPTS_DIR: /app/prompts
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      # Read-only bind mount: edit ./prompts on the host, the Enhance
+      # tab picks them up automatically. Comment out to use the prompts
+      # baked into the image.
+      - ./prompts:/app/prompts:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

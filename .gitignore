@@ -170,3 +170,39 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 fastapi_service.pid
+
+# ---- Node / Next.js (frontend/) ----
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.npm
+.eslintcache
+frontend/.env*.local
+frontend/.env
+
+# macOS
+.DS_Store
+
+# ---- Privacy Shield specific ----
+# Local env overrides (any depth). Tracked: .env.example, frontend/.env.example.
+*.env.local
+.env.*.local
+.env.local
+
+# Runtime data
+logs/
+backend/logs/
+data/
+
+# Editor / IDE noise
+.idea/
+.vscode/
+
+# Common keypair / cert leaks
+*.pem
+*.key
+!frontend/public/**/*.key
+*.pfx
+*.p12
+secrets/
