@@ -69,21 +69,28 @@ See [docs/architecture.md](docs/architecture.md) for the full design and [docs/a
 <details>
 <summary>Run locally without Docker</summary>
 
+In dev the SPA and API run on **two ports** (Vite dev server can't serve a Python
+backend), but Vite reverse-proxies the API paths so the browser still sees a single
+origin. In the published Docker image, FastAPI serves both the built SPA and the
+API on **one port** (`:8000`).
+
 ```bash
-# Backend (FastAPI on :8001)
+# Backend — FastAPI on :8001
 cd backend
 python3.10 -m venv env && source env/bin/activate
 pip install -r requirements.txt && pip install "uvicorn[standard]"
 python -m spacy download en_core_web_lg
 uvicorn api:app --reload --port 8001
 
-# Frontend (Vite on :3000, proxies API to :8001)
+# Frontend — Vite on :3000, proxies /detect-pii-entities, /anonymize-*,
+# /entities, /prompts, /convert, /health → http://127.0.0.1:8001
 cd ../frontend
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`. Hit the API directly at `http://localhost:8001/docs`
+for Swagger.
 </details>
 
 ## License

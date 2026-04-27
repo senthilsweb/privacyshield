@@ -14,13 +14,13 @@ const ENDPOINTS: Endpoint[] = [
     method: 'GET',
     path: '/health',
     summary: 'Liveness probe. Returns {"status":"ok"}.',
-    curl: `curl http://localhost:8088/health`,
+    curl: `curl http://localhost:8000/health`,
   },
   {
     method: 'POST',
     path: '/detect-pii-entities',
     summary: 'Detect PII spans in text without modifying it.',
-    curl: `curl -X POST http://localhost:8088/detect-pii-entities \\
+    curl: `curl -X POST http://localhost:8000/detect-pii-entities \\
   -H 'Content-Type: application/json' \\
   -d '{"text":"Linda Adams, ITIN 880-69-4570"}'`,
   },
@@ -28,7 +28,7 @@ const ENDPOINTS: Endpoint[] = [
     method: 'POST',
     path: '/anonymize-with-fake-data',
     summary: 'Replace PII with synthetic Faker values.',
-    curl: `curl -X POST http://localhost:8088/anonymize-with-fake-data \\
+    curl: `curl -X POST http://localhost:8000/anonymize-with-fake-data \\
   -H 'Content-Type: application/json' \\
   -d '{"text":"Adjuster Linda Adams","faker_seed":42}'`,
   },
@@ -36,7 +36,7 @@ const ENDPOINTS: Endpoint[] = [
     method: 'POST',
     path: '/anonymize-and-transform',
     summary: 'Anonymize → call LLM → reverse-anonymize.',
-    curl: `curl -X POST http://localhost:8088/anonymize-and-transform \\
+    curl: `curl -X POST http://localhost:8000/anonymize-and-transform \\
   -H 'Content-Type: application/json' \\
   -d '{"text":"Linda Adams ITIN 880-69-4570","prompt_template":"Rewrite as ticket:\\n\\n{anonymized_text}","model":"gpt-3.5-turbo","temperature":0.2}'`,
   },
@@ -44,25 +44,25 @@ const ENDPOINTS: Endpoint[] = [
     method: 'GET',
     path: '/prompts',
     summary: 'List prompt templates available on disk.',
-    curl: `curl http://localhost:8088/prompts`,
+    curl: `curl http://localhost:8000/prompts`,
   },
   {
     method: 'GET',
     path: '/prompts/{name}',
     summary: 'Fetch a single prompt template by file name.',
-    curl: `curl http://localhost:8088/prompts/incident`,
+    curl: `curl http://localhost:8000/prompts/incident`,
   },
   {
     method: 'GET',
     path: '/entities',
     summary: 'List PII entity types the analyzer supports (live).',
-    curl: `curl 'http://localhost:8088/entities?language=en'`,
+    curl: `curl 'http://localhost:8000/entities?language=en'`,
   },
   {
     method: 'POST',
     path: '/convert',
     summary: 'Markitdown placeholder. Returns 501 unless ENABLE_CONVERT=true.',
-    curl: `curl -X POST http://localhost:8088/convert`,
+    curl: `curl -X POST http://localhost:8000/convert`,
   },
 ];
 
@@ -90,9 +90,11 @@ export function DocsFeature() {
             HTTP API
           </CardTitle>
           <CardDescription>
-            All endpoints are same-origin in production. Replace
-            {' '}<code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">localhost:8088</code>{' '}
-            with your deployed host.
+            In production the SPA and API share one origin (default port {' '}
+            <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">8000</code>). In local dev the
+            Vite server on {' '}<code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">:3000</code>{' '}
+            proxies these paths to {' '}<code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">uvicorn :8001</code>,
+            so the same relative URLs work in both modes.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
